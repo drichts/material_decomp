@@ -174,3 +174,60 @@ def correct_leftover_pixels(data, one_frame, one_bin):
         num_nan = len(nan_coords)
 
     return data
+
+
+def get_average_single_pixel_value(img, pixel, dead_pixel_mask):
+    """
+    Averages the dead pixel using the 8 nearest neighbours
+    Checks the dead pixel mask to make sure each of the neighbors is not another dead pixel
+    :param img: 2D array
+                The projection image
+    :param pixel: tuple (row, column)
+                The problem pixel (is a 2-tuple)
+    :param dead_pixel_mask: 2D numpy array
+                Mask with 1 at good pixel coordinates and np.nan at bad pixel coordinates
+    :return: the average value of the surrounding pixels
+    """
+    shape = np.shape(img)
+    row, col = pixel
+
+    # Grabs each of the neighboring pixel values and sets to nan if they are bad pixels or
+    # outside the bounds of the image
+    if col == shape[1] - 1:
+        n1 = np.nan
+    else:
+        n1 = img[row, col + 1] * dead_pixel_mask[row, col + 1]
+    if col == 0:
+        n2 = np.nan
+    else:
+        n2 = img[row, col - 1] * dead_pixel_mask[row, col - 1]
+    if row == shape[0] - 1:
+        n3 = np.nan
+    else:
+        n3 = img[row + 1, col] * dead_pixel_mask[row + 1, col]
+    if row == 0:
+        n4 = np.nan
+    else:
+        n4 = img[row - 1, col] * dead_pixel_mask[row - 1, col]
+    if col == shape[1] - 1 or row == shape[0] - 1:
+        n5 = np.nan
+    else:
+        n5 = img[row + 1, col + 1] * dead_pixel_mask[row + 1, col + 1]
+    if col == 0 or row == shape[0] - 1:
+        n6 = np.nan
+    else:
+        n6 = img[row + 1, col - 1] * dead_pixel_mask[row + 1, col - 1]
+    if col == shape[1] - 1 or row == 0:
+        n7 = np.nan
+    else:
+        n7 = img[row - 1, col + 1] * dead_pixel_mask[row - 1, col + 1]
+    if col == 0 or row == 0:
+        n8 = np.nan
+    else:
+        n8 = img[row - 1, col - 1] * dead_pixel_mask[row - 1, col - 1]
+
+    # Takes the average of the neighboring pixels excluding nan values
+    avg = np.nanmean(np.array([n1, n2, n3, n4, n5, n6, n7, n8]))
+
+    return avg
+
